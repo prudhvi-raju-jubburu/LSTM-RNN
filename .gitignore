@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Intermediate / training checkpoint (keep best_model.pt tracked for inference)
+checkpoints/checkpoint_latest.pt
+
+# Audio outputs & test artifacts
+*.wav
+!data/sample_ljspeech/wavs/*.wav
+
+# Large dataset downloads & caches
+data/LJSpeech*
+!data/sample_ljspeech/
+.cache/
+
+# Virtual environments
+venv/
+.env/
+env/
+.venv/
+.DS_Store
