@@ -1,14 +1,33 @@
-# AI Text-to-Speech (TTS) Voice Generation System (LSTM + Attention)
+# 🗣️ AI Text-to-Speech (TTS) Voice Generation System (LSTM + Attention)
 
-An end-to-end Neural Text-to-Speech Voice Generation System that converts written English text into natural, intelligible audio speech for accessibility, virtual assistants, storytelling, and digital voice applications.
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.30%2B-FF4B4B.svg)](https://streamlit.io/)
+[![Dataset](https://img.shields.io/badge/Dataset-LJ%20Speech-success.svg)](https://keithito.com/LJ-Speech-Dataset/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Built with an **LSTM-based Encoder-Decoder Architecture with Location-Aware Attention**, trained on the **LJ Speech Dataset** (`mathurinache/the-lj-speech-dataset`), and powered by an interactive **Streamlit Voice Generation Studio**.
+An end-to-end **Neural Text-to-Speech (TTS) Voice Generation System** that converts written English text into natural, intelligible audio speech. Designed for accessibility, virtual assistants, dynamic storytelling, and custom synthetic voice applications.
+
+Built with a **Bidirectional LSTM Encoder**, **Location-Aware Additive Attention Alignment**, an **Autoregressive LSTM Decoder**, and a **5-Layer Residual PostNet**, backed by a fast **Griffin-Lim Acoustic Vocoder** and an interactive **Streamlit Voice Generation Studio**.
+
+---
+
+## ✨ Key Features
+
+- **End-to-End Neural Pipeline**: Fully differentiable sequence-to-sequence neural architecture translating character sequences into 80-channel log-Mel spectrograms.
+- **Location-Aware Attention**: Incorporates cumulative attention history convolutions to maintain monotonic text-to-speech alignment and prevent word skipping or repeating.
+- **PostNet Residual Enhancement**: 5-layer 1D convolutional residual network refining high-frequency acoustic details and spectral fidelity.
+- **Griffin-Lim Phase Retrieval**: Efficient, lightweight phase estimation for on-device waveform synthesis without requiring complex neural vocoder setups.
+- **Interactive Streamlit Web Studio**: Full-featured graphical studio with text presets, interactive waveform and spectrogram visualizers, attention alignment heatmaps, and audio modulation (speed, pitch, Griffin-Lim iterations).
+- **CLI & Scriptable Inference**: Fast standalone Python inference script for batch processing and terminal usage.
+- **Multi-Task Loss Training**: Jointly optimizes initial Mel reconstruction (MSE), PostNet-refined Mel reconstruction (MSE), and binary stop token prediction (BCE) with gradient clipping.
+- **LJ Speech Compatibility**: Native integration with the standard single-speaker LJ Speech Dataset (`mathurinache/the-lj-speech-dataset`).
 
 ---
 
 ## 🏛️ System Architecture
 
-```
+```text
 Raw Text Input (e.g. "Dr. Smith had 42 apples!")
        │
        ▼
@@ -67,16 +86,19 @@ Natural Audio Speech Waveform (.wav, 22,050 Hz)
 ## 📁 Repository Structure
 
 ```
-LSTM/
+LSTM-RNN/
 ├── config.py             # Audio, model, and training hyperparameters
 ├── text/
+│   ├── __init__.py
 │   ├── symbols.py        # Character vocabulary and special token mappings
 │   ├── cleaner.py        # Text normalization (numbers, abbreviations, punctuation)
 │   └── tokenizer.py      # Text-to-sequence and sequence-to-text conversion
 ├── audio/
+│   ├── __init__.py
 │   ├── audio_processing.py # Mel filterbank, STFT, Griffin-Lim vocoder, audio I/O
 │   └── visualizer.py     # Matplotlib waveform, spectrogram, and alignment plotting
 ├── models/
+│   ├── __init__.py
 │   ├── encoder.py        # Character embedding + 3x Conv1D + BiLSTM
 │   ├── attention.py      # Location-aware additive attention mechanism
 │   ├── decoder.py        # PreNet + 2-layer Uni-directional LSTM + Stop Token head
@@ -86,7 +108,8 @@ LSTM/
 ├── train.py              # Multi-task loss training loop with gradient clipping & checkpoints
 ├── inference.py          # High-level speech synthesis pipeline & CLI tool
 ├── app.py                # Streamlit Web Studio (Interactive Voice Generation & Visualizer)
-├── checkpoints/          # Saved model weights (best_model.pt)
+├── test_system.py        # Comprehensive unit & pipeline test suite
+├── checkpoints/          # Saved model weights (e.g. best_model.pt)
 ├── requirements.txt      # Dependency specification
 └── README.md             # Project documentation
 ```
@@ -95,52 +118,119 @@ LSTM/
 
 ## 🚀 Quick Start
 
-### 1. Installation
-Ensure dependencies are installed:
+### 1. Prerequisites & Environment Setup
+
+Clone the repository and set up a virtual environment:
+
 ```bash
+git clone https://github.com/prudhvi-raju-jubburu/LSTM-RNN.git
+cd LSTM-RNN
+
+# Create and activate virtual environment
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Launch the Interactive Web Studio
-Run the Streamlit application:
+### 2. Verify Installation
+
+Run the automated test suite to ensure all components (tokenizer, audio processing, model modules, and synthetic forward pass) function properly:
+
 ```bash
-streamlit run app.py
+python test_system.py
 ```
-Then open `http://localhost:8501` in your browser.
 
 ---
 
-## 🎙️ Command-Line Speech Synthesis
+## 🖥️ Interactive Web Studio
 
-Generate speech directly from the terminal:
+Launch the interactive Streamlit Voice Generation Studio:
+
+```bash
+streamlit run app.py
+```
+
+Open `http://localhost:8501` in your browser. The studio features:
+- **Text Input & Presets**: Pre-populated examples for speech synthesis, numbers, questions, and narrative paragraphs.
+- **Acoustic Modulation Controls**: Sliders for playback speed (0.5x to 2.0x), pitch semitone adjustment (-6 to +6 st), and Griffin-Lim iterations (20 to 100).
+- **Spectrogram & Waveform Visualizer**: Real-time plotting of the generated audio waveform and the 80-channel Mel spectrogram.
+- **Attention Alignment Heatmap**: Inspect how the attention weights track character phonemes across time frames.
+- **Audio Download**: One-click download of the synthesized `.wav` file.
+
+---
+
+## 🎙️ Command-Line Inference
+
+Generate speech directly from your terminal:
+
 ```bash
 python inference.py --text "Artificial intelligence voice generation using LSTM." --output speech.wav
 ```
 
-### Optional Acoustic Flags:
-- `--speed 1.2`: Speeds up playback by 20%.
-- `--pitch 2.0`: Increases pitch by +2 semitones.
-- `--iters 60`: Number of Griffin-Lim phase estimation iterations (higher = crisper audio).
-- `--checkpoint checkpoints/best_model.pt`: Custom model weights path.
+### Synthesis Arguments & Flags:
+| Argument | Default | Description |
+| :--- | :--- | :--- |
+| `--text` | `"Hello world!"` | Input text string to synthesize |
+| `--output` | `output.wav` | Destination file path for generated audio |
+| `--speed` | `1.0` | Speed multiplier (`0.5` = half speed, `1.5` = 50% faster) |
+| `--pitch` | `0.0` | Pitch shift in semitones (`+2.0` = higher, `-2.0` = lower) |
+| `--iters` | `60` | Number of Griffin-Lim phase recovery iterations |
+| `--checkpoint`| `checkpoints/best_model.pt` | Path to trained model weights |
+| `--device` | `cuda` (if available) | Computation device (`cpu` or `cuda`) |
 
 ---
 
 ## 🏋️ Training the Model
 
-Train the LSTM acoustic model with multi-task loss ($\mathcal{L}_{\text{mel}} + \mathcal{L}_{\text{postnet}} + \mathcal{L}_{\text{stop}}$):
+### Training with Synthetic / Demo Data
+To test training without downloading the full dataset:
 ```bash
-python train.py --epochs 20 --batch_size 4 --lr 0.001
+python train.py --epochs 10 --batch_size 4 --lr 0.001
 ```
 
-To train directly on the full LJSpeech dataset after downloading:
+### Training on the LJ Speech Dataset
+1. Download or locate your LJ Speech dataset folder containing `metadata.csv` and the `wavs/` directory.
+2. Run the training script:
 ```bash
-python train.py --data_path "C:/Users/jubbu/.cache/kagglehub/datasets/mathurinache/the-lj-speech-dataset" --epochs 50 --batch_size 16
+python train.py --data_path "path/to/LJSpeech-1.1" --epochs 50 --batch_size 16 --lr 0.001
 ```
+
+Checkpoints will automatically be saved to `checkpoints/best_model.pt` and `checkpoints/checkpoint_epoch_X.pt`.
 
 ---
 
-## 🔬 Multi-Task Loss Objective
+## 🔬 Mathematical Formulation
 
-$$\mathcal{L}_{\text{total}} = \text{MSE}(\text{Mel}_{\text{init}}, \text{Mel}_{\text{target}}) + \text{MSE}(\text{Mel}_{\text{post}}, \text{Mel}_{\text{target}}) + \text{BCE}(\text{Stop}_{\text{pred}}, \text{Stop}_{\text{target}})$$
+### 1. Location-Aware Attention
+The alignment score $e_{i,j}$ at decoder time step $i$ for encoder output $h_j$ is given by:
+$$e_{i,j} = v_a^\top \tanh\left(W_s s_i + W_h h_j + W_f f_{i,j} + b_a\right)$$
+where $f_i = F * \alpha_{i-1}$ is the result of convolving the cumulative attention weights with 32 1D filters, ensuring monotonic progression.
 
-Gradient clipping ($\|\mathbf{g}\| \le 1.0$) is enforced during backpropagation to prevent exploding gradients through the recurrent LSTM unrolling steps.
+### 2. Multi-Task Loss Objective
+The training loss combines linear Mel prediction, PostNet residual prediction, and the end-of-speech stop token loss:
+$$\mathcal{L}_{\text{total}} = \text{MSE}(\hat{M}_{\text{init}}, M) + \text{MSE}(\hat{M}_{\text{post}}, M) + \text{BCE}(\hat{S}, S)$$
+
+Gradient clipping with $\|\mathbf{g}\|_2 \le 1.0$ is applied to stabilize backpropagation through time across recurrent layers.
+
+---
+
+## 📦 Dependencies
+
+- **PyTorch** $\ge$ 2.0.0
+- **NumPy** $\ge$ 1.24.0
+- **SciPy** $\ge$ 1.10.0
+- **SoundFile** $\ge$ 0.12.0
+- **Matplotlib** $\ge$ 3.7.0
+- **Streamlit** $\ge$ 1.30.0
+- **kagglehub** $\ge$ 0.2.0
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more details.
